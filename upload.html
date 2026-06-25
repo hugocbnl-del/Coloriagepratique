@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coloriage Pratique — Uploadez votre photo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --orange: #FF6B35; --orange-light: #FFF0EB; --teal: #4ECDC4;
+  --dark: #1A1A2E; --muted: #6B7280; --bg: #FFF8F5; --white: #FFFFFF; --radius: 16px;
+}
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--dark); min-height: 100vh; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
+
+nav {
+  background: rgba(255,248,245,0.95); border-bottom: 1px solid rgba(255,107,53,0.12);
+  padding: 0 24px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo { font-family: 'Fredoka One', cursive; font-size: 22px; color: var(--orange); text-decoration: none; }
+.logo span { color: var(--dark); }
+
+.main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+
+.card {
+  background: var(--white); border-radius: 24px;
+  padding: 40px; width: 100%; max-width: 520px;
+  box-shadow: 0 4px 32px rgba(26,26,46,0.08);
+}
+
+/* ÉTAPES */
+.steps-indicator {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 32px;
+}
+.step-dot {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600; flex-shrink: 0;
+}
+.step-dot.active { background: var(--orange); color: white; }
+.step-dot.done { background: var(--teal); color: white; }
+.step-dot.pending { background: #F3F4F6; color: var(--muted); }
+.step-line { flex: 1; height: 2px; background: #F3F4F6; border-radius: 1px; }
+.step-line.done { background: var(--teal); }
+
+.card h1 { font-family: 'Fredoka One', cursive; font-size: 26px; margin-bottom: 8px; }
+.card p.subtitle { font-size: 15px; color: var(--muted); margin-bottom: 28px; }
+
+/* UPLOAD ZONE */
+.upload-zone {
+  border: 2px dashed #E5E7EB;
+  border-radius: var(--radius);
+  padding: 36px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+  margin-bottom: 20px;
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--orange);
+  background: var(--orange-light);
+}
+.upload-zone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.upload-icon { font-size: 40px; margin-bottom: 12px; }
+.upload-zone h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.upload-zone p { font-size: 13px; color: var(--muted); }
+
+/* PREVIEW */
+.preview-wrap {
+  display: none;
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 20px;
+  position: relative;
+}
+.preview-wrap img {
+  width: 100%; display: block;
+  max-height: 280px; object-fit: cover;
+}
+.preview-change {
+  position: absolute; bottom: 10px; right: 10px;
+  background: rgba(0,0,0,0.6); color: white;
+  border: none; border-radius: 8px; padding: 6px 12px;
+  font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif;
+}
+
+/* EMAIL */
+.field { margin-bottom: 20px; }
+.field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--dark); }
+.field input {
+  width: 100%; padding: 12px 16px;
+  border: 1.5px solid #E5E7EB; border-radius: 10px;
+  font-size: 15px; font-family: 'Inter', sans-serif;
+  outline: none; transition: border-color 0.2s;
+}
+.field input:focus { border-color: var(--orange); }
+
+/* BOUTON */
+.btn-submit {
+  width: 100%; background: var(--orange); color: white;
+  border: none; border-radius: 100px; padding: 16px;
+  font-size: 17px; font-weight: 600; font-family: 'Inter', sans-serif;
+  cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,107,53,0.35); }
+.btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.hint { font-size: 12px; color: var(--muted); text-align: center; margin-top: 14px; }
+
+/* LOADING */
+.loading-state { display: none; text-align: center; padding: 20px 0; }
+.spinner {
+  width: 48px; height: 48px; border: 4px solid #F3F4F6;
+  border-top-color: var(--orange); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-state h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+.loading-state p { font-size: 14px; color: var(--muted); }
+.loading-steps { list-style: none; text-align: left; margin-top: 20px; display: inline-block; }
+.loading-steps li { font-size: 13px; color: var(--muted); padding: 4px 0; display: flex; align-items: center; gap: 8px; }
+.loading-steps li.done { color: var(--teal); }
+.loading-steps li.active { color: var(--dark); font-weight: 500; }
+
+/* SUCCESS */
+.success-state { display: none; text-align: center; padding: 20px 0; }
+.success-icon { font-size: 64px; margin-bottom: 16px; }
+.success-state h2 { font-family: 'Fredoka One', cursive; font-size: 28px; margin-bottom: 10px; color: var(--dark); }
+.success-state p { font-size: 15px; color: var(--muted); line-height: 1.6; }
+.email-highlight { color: var(--orange); font-weight: 600; }
+
+/* ERROR */
+.error-msg {
+  background: #FEF2F2; border: 1px solid #FECACA;
+  border-radius: 10px; padding: 12px 16px;
+  font-size: 13px; color: #DC2626;
+  margin-bottom: 16px; display: none;
+}
+
+footer { padding: 20px; text-align: center; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">Coloriage<span>Pratique</span></a>
+</nav>
+
+<main class="main">
+  <div class="card">
+
+    <!-- Indicateur d'étapes -->
+    <div class="steps-indicator">
+      <div class="step-dot done">✓</div>
+      <div class="step-line done"></div>
+      <div class="step-dot active">2</div>
+      <div class="step-line"></div>
+      <div class="step-dot pending">3</div>
+    </div>
+
+    <!-- Formulaire upload -->
+    <div id="formState">
+      <h1>🎨 Votre photo</h1>
+      <p class="subtitle">Uploadez la photo à transformer en coloriage. Vous recevrez le PDF par email en 2 minutes.</p>
+
+      <div class="error-msg" id="errorMsg"></div>
+
+      <!-- Zone d'upload -->
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" />
+        <div class="upload-icon">📸</div>
+        <h3>Glissez votre photo ici</h3>
+        <p>ou cliquez pour choisir · JPG, PNG, WEBP · max 10 Mo</p>
+      </div>
+
+      <!-- Aperçu de la photo -->
+      <div class="preview-wrap" id="previewWrap">
+        <img id="previewImg" src="" alt="Aperçu">
+        <button class="preview-change" onclick="resetFile()">Changer</button>
+      </div>
+
+      <!-- Email -->
+      <div class="field">
+        <label for="emailInput">Votre email <span style="color:var(--orange)">*</span></label>
+        <input type="email" id="emailInput" placeholder="vous@exemple.fr" autocomplete="email" />
+      </div>
+
+      <button class="btn-submit" id="submitBtn" onclick="submitForm()">
+        <span>Générer mon coloriage</span> <span>→</span>
+      </button>
+      <p class="hint">🔒 Votre photo est supprimée après génération et n'est jamais partagée.</p>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" id="loadingState">
+      <div class="spinner"></div>
+      <h3>Génération en cours...</h3>
+      <p>Notre IA transforme votre photo en coloriage</p>
+      <ul class="loading-steps">
+        <li id="step1" class="active">⏳ Analyse de la photo</li>
+        <li id="step2" class="pending">⏳ Génération du coloriage IA</li>
+        <li id="step3" class="pending">⏳ Création du PDF A4</li>
+        <li id="step4" class="pending">⏳ Envoi par email</li>
+      </ul>
+    </div>
+
+    <!-- Succès -->
+    <div class="success-state" id="successState">
+      <div class="success-icon">🎉</div>
+      <h2>Votre coloriage est prêt !</h2>
+      <p>Nous avons envoyé le PDF à<br><span class="email-highlight" id="successEmail"></span></p>
+      <p style="margin-top:12px;">Vérifiez vos spams si vous ne le voyez pas dans 5 minutes.</p>
+    </div>
+
+  </div>
+</main>
+
+<footer>ColoriagePratique.fr — Vos données sont protégées et supprimées après génération.</footer>
+
+<script>
+const BACKEND_URL = 'https://coloriage-backend-production.up.railway.app'; // ex: https://coloriage.up.railway.app
+
+let selectedFile = null;
+
+// Drag & drop
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+});
+
+// File input
+document.getElementById('fileInput').addEventListener('change', e => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+function handleFile(file) {
+  if (file.size > 10 * 1024 * 1024) {
+    showError('Fichier trop lourd (max 10 Mo).');
+    return;
+  }
+  selectedFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('uploadZone').style.display = 'none';
+    document.getElementById('previewWrap').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetFile() {
+  selectedFile = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('uploadZone').style.display = 'block';
+  document.getElementById('previewWrap').style.display = 'none';
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideError() {
+  document.getElementById('errorMsg').style.display = 'none';
+}
+
+async function submitForm() {
+  hideError();
+
+  const email = document.getElementById('emailInput').value.trim();
+  if (!email || !email.includes('@')) { showError('Entrez un email valide.'); return; }
+  if (!selectedFile) { showError('Choisissez une photo.'); return; }
+
+  // Passer en mode loading
+  document.getElementById('formState').style.display = 'none';
+  document.getElementById('loadingState').style.display = 'block';
+
+  // Animer les étapes
+  animateSteps();
+
+  // Envoyer au backend
+  const formData = new FormData();
+  formData.append('photo', selectedFile);
+  formData.append('email', email);
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/generate`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error('Erreur serveur');
+
+    // Succès
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('successState').style.display = 'block';
+    document.getElementById('successEmail').textContent = email;
+
+  } catch (err) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('formState').style.display = 'block';
+    showError('Une erreur est survenue. Réessayez ou contactez bonjour@coloriagepratique.fr');
+  }
+}
+
+function animateSteps() {
+  const steps = ['step1','step2','step3','step4'];
+  const labels = ['✅ Photo analysée', '✅ Coloriage généré', '✅ PDF créé', '✅ Email envoyé'];
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i > 0) {
+      document.getElementById(steps[i-1]).textContent = labels[i-1];
+      document.getElementById(steps[i-1]).className = 'done';
+    }
+    if (i < steps.length) {
+      document.getElementById(steps[i]).className = 'active';
+      document.getElementById(steps[i]).textContent = '⏳ ' + document.getElementById(steps[i]).textContent.slice(2);
+    }
+    i++;
+    if (i >= steps.length) clearInterval(interval);
+  }, 4000);
+}
+</script>
+</body>
+</html>
