@@ -273,37 +273,8 @@ const paymentId = urlParams.get('session_id') || urlParams.get('payment_id') || 
 // ─── Vérifie les crédits au chargement de la page ───
 async function checkCreditsOnLoad() {
   if (!paymentId) {
-    // Pas de payment_id dans l'URL → accès non autorisé
     document.getElementById('formState').style.display = 'none';
     document.getElementById('paymentError').style.display = 'block';
-    return;
-  }
-
-  try {
-    const res = await fetch(`${BACKEND_URL}/credits/${paymentId}`);
-    if (!res.ok) {
-      document.getElementById('formState').style.display = 'none';
-      document.getElementById('paymentError').style.display = 'block';
-      return;
-    }
-    const data = await res.json();
-
-    if (data.remaining <= 0) {
-      document.getElementById('formState').style.display = 'none';
-      document.getElementById('paymentError').style.display = 'block';
-      return;
-    }
-
-    // Affiche le badge crédits si pack ou abonnement
-    if (data.remaining > 1) {
-      const badge = document.getElementById('creditsBadge');
-      badge.textContent = `🎨 ${data.remaining} dibujos disponibles`;
-      badge.style.display = 'block';
-    }
-
-  } catch(e) {
-    // En cas d'erreur réseau on laisse passer (fail open)
-    console.warn('Impossible de vérifier les crédits:', e);
   }
 }
 
