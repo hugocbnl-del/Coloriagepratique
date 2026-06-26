@@ -30,7 +30,6 @@ nav {
   box-shadow: 0 4px 32px rgba(26,26,46,0.08);
 }
 
-/* ÉTAPES */
 .steps-indicator {
   display: flex; align-items: center; gap: 8px;
   margin-bottom: 32px;
@@ -49,7 +48,6 @@ nav {
 .card h1 { font-family: 'Fredoka One', cursive; font-size: 26px; margin-bottom: 8px; }
 .card p.subtitle { font-size: 15px; color: var(--muted); margin-bottom: 28px; }
 
-/* UPLOAD ZONE */
 .upload-zone {
   border: 2px dashed #E5E7EB;
   border-radius: var(--radius);
@@ -71,7 +69,6 @@ nav {
 .upload-zone h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
 .upload-zone p { font-size: 13px; color: var(--muted); }
 
-/* PREVIEW */
 .preview-wrap {
   display: none;
   border-radius: var(--radius);
@@ -90,7 +87,6 @@ nav {
   font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif;
 }
 
-/* EMAIL */
 .field { margin-bottom: 20px; }
 .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--dark); }
 .field input {
@@ -101,7 +97,6 @@ nav {
 }
 .field input:focus { border-color: var(--orange); }
 
-/* BOUTON */
 .btn-submit {
   width: 100%; background: var(--orange); color: white;
   border: none; border-radius: 100px; padding: 16px;
@@ -114,7 +109,14 @@ nav {
 
 .hint { font-size: 12px; color: var(--muted); text-align: center; margin-top: 14px; }
 
-/* LOADING */
+.credits-badge {
+  background: var(--orange-light); color: var(--orange);
+  border-radius: 100px; padding: 6px 14px;
+  font-size: 13px; font-weight: 600;
+  text-align: center; margin-bottom: 20px;
+  display: none;
+}
+
 .loading-state { display: none; text-align: center; padding: 20px 0; }
 .spinner {
   width: 48px; height: 48px; border: 4px solid #F3F4F6;
@@ -129,19 +131,44 @@ nav {
 .loading-steps li.done { color: var(--teal); }
 .loading-steps li.active { color: var(--dark); font-weight: 500; }
 
-/* SUCCESS */
 .success-state { display: none; text-align: center; padding: 20px 0; }
 .success-icon { font-size: 64px; margin-bottom: 16px; }
 .success-state h2 { font-family: 'Fredoka One', cursive; font-size: 28px; margin-bottom: 10px; color: var(--dark); }
 .success-state p { font-size: 15px; color: var(--muted); line-height: 1.6; }
 .email-highlight { color: var(--orange); font-weight: 600; }
 
-/* ERROR */
+.credits-remaining {
+  margin-top: 16px;
+  background: var(--orange-light);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--orange);
+  font-weight: 600;
+}
+
 .error-msg {
   background: #FEF2F2; border: 1px solid #FECACA;
   border-radius: 10px; padding: 12px 16px;
   font-size: 13px; color: #DC2626;
   margin-bottom: 16px; display: none;
+}
+
+/* Page d'erreur paiement non reconnu */
+.payment-error {
+  display: none;
+  text-align: center;
+  padding: 20px 0;
+}
+.payment-error .error-icon { font-size: 48px; margin-bottom: 16px; }
+.payment-error h2 { font-family: 'Fredoka One', cursive; font-size: 24px; margin-bottom: 10px; color: var(--dark); }
+.payment-error p { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+.payment-error a {
+  display: inline-block;
+  background: var(--orange); color: white;
+  border-radius: 100px; padding: 12px 28px;
+  font-size: 15px; font-weight: 600;
+  text-decoration: none;
 }
 
 footer { padding: 20px; text-align: center; font-size: 12px; color: var(--muted); }
@@ -156,7 +183,6 @@ footer { padding: 20px; text-align: center; font-size: 12px; color: var(--muted)
 <main class="main">
   <div class="card">
 
-    <!-- Indicateur d'étapes -->
     <div class="steps-indicator">
       <div class="step-dot done">✓</div>
       <div class="step-line done"></div>
@@ -165,14 +191,24 @@ footer { padding: 20px; text-align: center; font-size: 12px; color: var(--muted)
       <div class="step-dot pending">3</div>
     </div>
 
+    <!-- Erreur paiement non reconnu -->
+    <div class="payment-error" id="paymentError">
+      <div class="error-icon">🔒</div>
+      <h2>Acceso no autorizado</h2>
+      <p>No hemos podido verificar tu pago. Por favor, completa el pago primero.</p>
+      <a href="/">Volver al inicio</a>
+    </div>
+
     <!-- Formulaire upload -->
     <div id="formState">
       <h1>🎨 Tu foto</h1>
       <p class="subtitle">Sube la foto que quieres convertir en un dibujo para colorear. Recibirás el PDF por correo electrónico en unos 2 minutos.</p>
 
+      <!-- Badge crédits restants -->
+      <div class="credits-badge" id="creditsBadge"></div>
+
       <div class="error-msg" id="errorMsg"></div>
 
-      <!-- Zone d'upload -->
       <div class="upload-zone" id="uploadZone">
         <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" />
         <div class="upload-icon">📸</div>
@@ -180,13 +216,11 @@ footer { padding: 20px; text-align: center; font-size: 12px; color: var(--muted)
         <p>o haz clic para seleccionarla · JPG, PNG, WEBP · máximo 10 MB</p>
       </div>
 
-      <!-- Aperçu de la photo -->
       <div class="preview-wrap" id="previewWrap">
         <img id="previewImg" src="" alt="Vista previa">
         <button class="preview-change" onclick="resetFile()">Cambiar</button>
       </div>
 
-      <!-- Email -->
       <div class="field">
         <label for="emailInput">Tu correo electrónico <span style="color:var(--orange)">*</span></label>
         <input type="email" id="emailInput" placeholder="tu@email.com" autocomplete="email" />
@@ -217,6 +251,8 @@ footer { padding: 20px; text-align: center; font-size: 12px; color: var(--muted)
       <h2>¡Tu dibujo para colorear está listo!</h2>
       <p>Hemos enviado el PDF a<br><span class="email-highlight" id="successEmail"></span></p>
       <p style="margin-top:12px;">Revisa la carpeta de spam si no lo ves en los próximos 5 minutos.</p>
+      <!-- Crédits restants après génération -->
+      <div class="credits-remaining" id="creditsRemaining" style="display:none;"></div>
     </div>
 
   </div>
@@ -225,11 +261,56 @@ footer { padding: 20px; text-align: center; font-size: 12px; color: var(--muted)
 <footer>Dibujami — Tus datos están protegidos y se eliminan después de la generación.</footer>
 
 <script>
-const BACKEND_URL = 'https://coloriage-backend-production.up.railway.app'; // ex: https://coloriage.up.railway.app
+const BACKEND_URL = 'https://coloriage-backend-production.up.railway.app';
 
 let selectedFile = null;
 
-// Drag & drop
+// ─── Récupère le payment_id depuis l'URL ───
+// Stripe redirige vers : /upload.html?session_id=cs_xxx
+const urlParams = new URLSearchParams(window.location.search);
+const paymentId = urlParams.get('session_id') || urlParams.get('payment_id') || '';
+
+// ─── Vérifie les crédits au chargement de la page ───
+async function checkCreditsOnLoad() {
+  if (!paymentId) {
+    // Pas de payment_id dans l'URL → accès non autorisé
+    document.getElementById('formState').style.display = 'none';
+    document.getElementById('paymentError').style.display = 'block';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/credits/${paymentId}`);
+    if (!res.ok) {
+      document.getElementById('formState').style.display = 'none';
+      document.getElementById('paymentError').style.display = 'block';
+      return;
+    }
+    const data = await res.json();
+
+    if (data.remaining <= 0) {
+      document.getElementById('formState').style.display = 'none';
+      document.getElementById('paymentError').style.display = 'block';
+      return;
+    }
+
+    // Affiche le badge crédits si pack ou abonnement
+    if (data.remaining > 1) {
+      const badge = document.getElementById('creditsBadge');
+      badge.textContent = `🎨 ${data.remaining} dibujos disponibles`;
+      badge.style.display = 'block';
+    }
+
+  } catch(e) {
+    // En cas d'erreur réseau on laisse passer (fail open)
+    console.warn('Impossible de vérifier les crédits:', e);
+  }
+}
+
+// Lance la vérification au chargement
+checkCreditsOnLoad();
+
+// ─── Drag & drop ───
 const zone = document.getElementById('uploadZone');
 zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
 zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
@@ -240,7 +321,6 @@ zone.addEventListener('drop', e => {
   if (file) handleFile(file);
 });
 
-// File input
 document.getElementById('fileInput').addEventListener('change', e => {
   if (e.target.files[0]) handleFile(e.target.files[0]);
 });
@@ -283,18 +363,17 @@ async function submitForm() {
   const email = document.getElementById('emailInput').value.trim();
   if (!email || !email.includes('@')) { showError('Introduce un correo electrónico válido.'); return; }
   if (!selectedFile) { showError('Selecciona una foto.'); return; }
+  if (!paymentId) { showError('Pago no verificado. Vuelve al inicio.'); return; }
 
-  // Passer en mode loading
   document.getElementById('formState').style.display = 'none';
   document.getElementById('loadingState').style.display = 'block';
 
-  // Animer les étapes
   animateSteps();
 
-  // Envoyer au backend
   const formData = new FormData();
   formData.append('photo', selectedFile);
   formData.append('email', email);
+  formData.append('payment_id', paymentId); // ← envoi du payment_id
 
   try {
     const response = await fetch(`${BACKEND_URL}/generate`, {
@@ -302,12 +381,26 @@ async function submitForm() {
       body: formData,
     });
 
+    if (response.status === 403) {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('paymentError').style.display = 'block';
+      return;
+    }
+
     if (!response.ok) throw new Error('Error del servidor');
 
-    // Succès
+    const data = await response.json();
+
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('successState').style.display = 'block';
     document.getElementById('successEmail').textContent = email;
+
+    // Affiche les crédits restants si pack ou abonnement
+    if (data.credits_remaining > 0) {
+      const cr = document.getElementById('creditsRemaining');
+      cr.textContent = `🎨 Te quedan ${data.credits_remaining} dibujos disponibles`;
+      cr.style.display = 'block';
+    }
 
   } catch (err) {
     document.getElementById('loadingState').style.display = 'none';
